@@ -2,14 +2,15 @@
 using Microsoft.AspNetCore.Mvc;
 using RestSharpSocialMediaPosts.Models.Reddit;
 using RestSharpSocialMediaPosts.Services;
+using RestSharpSocialMediaPosts.Services.Interfaces;
 
 namespace RestSharpSocialMediaPosts.Controllers
 {
     public class RedditController : ControllerBase
     {
-        private readonly RedditService _redditService;
+        private readonly IRedditService _redditService;
         private string? accessToken = null;
-        public RedditController(RedditService redditService)
+        public RedditController(IRedditService redditService)
         {
             _redditService = redditService;
         }
