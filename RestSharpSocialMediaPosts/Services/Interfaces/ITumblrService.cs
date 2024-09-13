@@ -4,7 +4,6 @@ namespace RestSharpSocialMediaPosts.Services.Interfaces
 {
     public interface ITumblrService
     {
-        Task<(string, string, string)> GetOAuthVerifier(string consumerKey, string consumerSecret);
-        Task<string> PostTextPost(TumblrTextPostModel textPostModel);
+        Task<string?> MakeOAuth2Request(TumblrAuthModel authModel);
     }
 }

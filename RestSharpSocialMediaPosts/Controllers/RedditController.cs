@@ -8,11 +8,11 @@ namespace RestSharpSocialMediaPosts.Controllers
 {
     public class RedditController : ControllerBase
     {
-        private readonly IRedditService _redditService;
+        private readonly IRedditService _service;
         private string? accessToken = null;
         public RedditController(IRedditService redditService)
         {
-            _redditService = redditService;
+            _service = redditService;
         }
 
         [AllowAnonymous]
@@ -23,7 +23,7 @@ namespace RestSharpSocialMediaPosts.Controllers
             
             try
             {
-                accessToken = await _redditService.GetAccessToken(loginModel);
+                accessToken = await _service.GetAccessToken(loginModel);
                 if (accessToken == null)
                 {
                     return BadRequest("An error occurred");
@@ -39,6 +39,36 @@ namespace RestSharpSocialMediaPosts.Controllers
             }
         }
 
+        [AllowAnonymous]
+        [HttpPost("post_thread")]
+        public async Task<IActionResult> Post(RedditPostModel postModel)
+        {
+            int code = 201;
+
+            if (accessToken != null)
+            {
+                try
+                {
+                    string? result = await _service.SubmitPost(postModel, accessToken);
+                    if (result != null)
+                    {
+                        return StatusCode(code, result);
+                    }
+                    else
+                    {
+                        return BadRequest();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(ex.Message);
+                }
+            }
+            else
+            {
+                return Unauthorized();
+            }
+        }
 
     }
 }

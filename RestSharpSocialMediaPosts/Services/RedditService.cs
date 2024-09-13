@@ -81,20 +81,19 @@ namespace RestSharpSocialMediaPosts.Services
             return (client, request);
         }
 
-        public async void SubmitPost(RedditPostModel postModel, string accessToken)
+        public async Task<string?> SubmitPost(RedditPostModel postModel, string accessToken)
         {
             var (client, request) = FillOutPostRequest(postModel, accessToken);
             var submitResponse = await client.ExecuteAsync(request);
 
             if (submitResponse.IsSuccessful)
             {
-                Console.WriteLine("Post submitted successfully!");
-                Console.WriteLine(submitResponse.Content);
+                return "Post submitted successfully!";
             }
             else
             {
-                Console.WriteLine($"Error: {submitResponse.StatusCode}");
                 Console.WriteLine(submitResponse.Content);
+                return $"Error: {submitResponse.StatusCode}";
             }
         }
     }
