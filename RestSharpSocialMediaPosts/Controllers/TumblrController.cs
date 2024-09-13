@@ -12,6 +12,8 @@ namespace RestSharpSocialMediaPosts.Controllers
         private readonly ITumblrService _service;
         private string? accessRequestCode = null;
         private string? accessToken = null;
+        private string? refreshToken = null;
+        private string? expiresIn = null;
 
         public TumblrController(ITumblrService tumblrService)
         {
@@ -19,19 +21,37 @@ namespace RestSharpSocialMediaPosts.Controllers
         }
 
         [AllowAnonymous]
-        [HttpPost("request_permission")]
-        public async Task<IActionResult> RequestPermission(TumblrAuthModel authModel)
+        [HttpGet("request_permission")]
+        public async Task<IActionResult?> RequestPermission(TumblrAuthModel authModel)
         {
             try
             {
-                accessRequestCode = await _service.MakeOAuth2Request(authModel);
-                if (accessRequestCode != null)
+                _service.MakeOAuth2Request();
+                return StatusCode(201);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpGet("get_token")]
+        public async Task<IActionResult> GetAccessToken([FromQuery] string code)
+        {
+            try
+            {
+                TumblrAccessTokenModel? tokenModel = await _service.GetAccessToken(code);
+                if (tokenModel != null)
                 {
-                    return StatusCode(201, accessRequestCode);
+                    accessToken = tokenModel.AccessToken;
+                    refreshToken = tokenModel.RefreshToken;
+                    expiresIn = tokenModel.ExpiresIn;
+                    return StatusCode(201, accessToken);
                 }
                 else
                 {
-                    return StatusCode(400, "no access code");
+                    return BadRequest();
                 }
             }
             catch (Exception ex)
@@ -40,4 +60,5 @@ namespace RestSharpSocialMediaPosts.Controllers
             }
         }
     }
+
 }

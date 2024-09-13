@@ -6,6 +6,7 @@ using System.Web;
 using RestSharpSocialMediaPosts.Models.Tumblr;
 using RestSharpSocialMediaPosts.Services.Interfaces;
 using System.Formats.Asn1;
+using Newtonsoft.Json.Linq;
 
 namespace RestSharpSocialMediaPosts.Services
 {
@@ -14,10 +15,14 @@ namespace RestSharpSocialMediaPosts.Services
 
         private string _accessToken;
 
-        public async Task<string?> MakeOAuth2Request(TumblrAuthModel authModel)
+        public async void MakeOAuth2Request()
         {
             RestClient client = new RestClient("https://www.tumblr.com/");
-            RestRequest request = new RestRequest("oauth2/authorize");
+            RestRequest request = new RestRequest("oauth2/authorize", Method.Get);
+
+            //request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
+
+            TumblrAuthModel authModel = new TumblrAuthModel();
 
             request.AddParameter("client_id", authModel.client_id);
             request.AddParameter("response_type", authModel.response_type);
@@ -30,35 +35,61 @@ namespace RestSharpSocialMediaPosts.Services
 
             try
             {
-                var response = await client.ExecuteAsync(request);
-                if (response.IsSuccessful)
+                System.Diagnostics.Process.Start(new ProcessStartInfo
                 {
-                    var parsedString = HttpUtility.ParseQueryString(response.Content);
-                    System.Diagnostics.Debug.WriteLine(parsedString);
-                    string codeForAccessToken = parsedString["code"];
-                    string stateToCompare = parsedString["state"];
-                    System.Diagnostics.Debug.WriteLine(codeForAccessToken);
-                    System.Diagnostics.Debug.WriteLine(stateToCompare);
-                    if (stateToCompare == authModel.state)
-                    {
-                        return codeForAccessToken;
-                    }
-                    else
-                    {
-                        return "State values did not match; error retrieving code for access token";
-                    }
-                }
-                else
-                {
-                    Console.WriteLine($"Error: {response.StatusCode}");
-                    Console.WriteLine($"Content: {response.Content}");
-                    return null;
-                }
+                    FileName = client.BuildUri(request).ToString(),
+                    UseShellExecute = true,
+                });
 
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Exception occurred: {ex.Message}");
+            }
+        }
+
+        public async Task<TumblrAccessTokenModel?> GetAccessToken(string authToken)
+        {
+            RestClient client = new RestClient("https://api.tumblr.com/");
+            RestRequest request = new RestRequest("v2/oauth2/token", Method.Post);
+
+            TumblrAccessModel accessModel = new TumblrAccessModel();
+            accessModel.code = authToken;
+
+            request.AddParameter("grant_type", accessModel.grant_type);
+            request.AddParameter("code", accessModel.code);
+            request.AddParameter("client_id", accessModel.client_id);
+            request.AddParameter("client_secret", accessModel.client_secret);
+
+            try
+            {
+                var response = await client.ExecuteAsync(request);
+                if (response.IsSuccessful)
+                {
+                    var json = JObject.Parse(response.Content);
+                    if (json != null)
+                    {
+                        string accessToken = json["access_token"].ToString();
+                        string refreshToken = json["refresh_token"].ToString();
+                        string expiresIn = json["expires_in"].ToString();
+                        TumblrAccessTokenModel tokenModel = new TumblrAccessTokenModel();
+                        tokenModel.AccessToken = accessToken;
+                        tokenModel.RefreshToken = refreshToken;
+                        tokenModel.ExpiresIn = expiresIn;
+                        return tokenModel;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (Exception ex) 
+            {
                 return null;
             }
         }
