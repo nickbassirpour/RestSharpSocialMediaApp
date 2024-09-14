@@ -12,7 +12,6 @@ namespace RestSharpSocialMediaPosts.Controllers
         private readonly ITumblrService _service;
         private string? accessRequestCode = null;
         private string? accessToken = null;
-        private string? refreshToken = null;
         private string? expiresIn = null;
 
         public TumblrController(ITumblrService tumblrService)
@@ -37,7 +36,7 @@ namespace RestSharpSocialMediaPosts.Controllers
 
         [AllowAnonymous]
         [HttpGet("get_token")]
-        public async Task<IActionResult> GetAccessToken([FromQuery] string code)
+        private async Task<IActionResult> GetAccessToken(string code, string state)
         {
             try
             {
@@ -45,7 +44,6 @@ namespace RestSharpSocialMediaPosts.Controllers
                 if (tokenModel != null)
                 {
                     accessToken = tokenModel.AccessToken;
-                    refreshToken = tokenModel.RefreshToken;
                     expiresIn = tokenModel.ExpiresIn;
                     return StatusCode(201, accessToken);
                 }

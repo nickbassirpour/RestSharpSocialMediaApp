@@ -9,19 +9,20 @@ namespace RestSharpSocialMediaPosts.Models.Reddit
 {
     public class RedditPostModel
     {
-        public string redditUserName { get; set; }
-        public string redditAppName { get; set; }
+        public string UserName { get; set; }
+        public string AppName { get; set; }
         [StringLength(300)]
-        public string title { get; set; }
-        public string text { get; set; }
-        public string subReddit { get; set; }
+        public string Title { get; set; }
+        public string? Text { get; set; }
+        public string? Url { get; set; }
+        public string SubReddit { get; set; }
         [StringLength(36)]
-        public string? flairId { get; set; }
+        public string? FlairId { get; set; }
         [StringLength(64)]
-        public string? flairText { get; set; }
+        public string? FlairText { get; set; }
         [RegularExpression("link|self|image|video|videogif", ErrorMessage = "Invalid Post Type")]
-        public string kind { get; set; }
-        public Uri? link { get; set; }
+        public string Kind { get; set; }
+        public Uri? Link { get; set; }
 
     }
 }

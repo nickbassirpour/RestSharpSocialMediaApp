@@ -70,11 +70,9 @@ namespace RestSharpSocialMediaPosts.Services
                     if (json != null)
                     {
                         string accessToken = json["access_token"].ToString();
-                        string refreshToken = json["refresh_token"].ToString();
                         string expiresIn = json["expires_in"].ToString();
                         TumblrAccessTokenModel tokenModel = new TumblrAccessTokenModel();
                         tokenModel.AccessToken = accessToken;
-                        tokenModel.RefreshToken = refreshToken;
                         tokenModel.ExpiresIn = expiresIn;
                         return tokenModel;
                     }

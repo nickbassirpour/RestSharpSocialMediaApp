@@ -17,13 +17,13 @@ namespace RestSharpSocialMediaPosts.Services
             RestRequest request = new RestRequest("/api/v1/access_token", Method.Post);
 
             // Add headers
-            request.AddHeader("Authorization", "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{loginModel.client_id}:{loginModel.client_secret}")));
+            request.AddHeader("Authorization", "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{loginModel.ClientId}:{loginModel.ClientSecret}")));
             request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
 
             // Add Parameters
             request.AddParameter("grant_type", "password");
-            request.AddParameter("username", loginModel.username);
-            request.AddParameter("password", loginModel.password);
+            request.AddParameter("username", loginModel.Username);
+            request.AddParameter("password", loginModel.Password);
 
             return (client, request);
         }
@@ -63,20 +63,30 @@ namespace RestSharpSocialMediaPosts.Services
             RestClient client = new RestClient("https://oauth.reddit.com");
 
             // Rest Request for the submit
-            RestRequest request = new RestRequest($"/r/{postModel.subReddit}/api/submit", Method.Post);
+            RestRequest request = new RestRequest($"/r/{postModel.SubReddit}/api/submit", Method.Post);
 
             // Add headers
             request.AddHeader("Authorization", $"Bearer {accessToken}");
-            request.AddHeader("User-Agent", $"{postModel.redditAppName}/1.0 by {postModel.redditUserName}");
+            request.AddHeader("User-Agent", $"{postModel.AppName}/1.0 by {postModel.UserName}");
             request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
 
             // add parameters
-            request.AddParameter("kind", postModel.kind);
-            request.AddParameter("sr", postModel.subReddit);
-            request.AddParameter("title", postModel.title);
-            request.AddParameter("text", postModel.text);
-            request.AddParameter("flair_id", postModel.flairId);
-            request.AddParameter("flair_text", postModel.flairText);
+            request.AddParameter("kind", postModel.Kind);
+            request.AddParameter("sr", postModel.SubReddit);
+            request.AddParameter("title", postModel.Title);
+            if (postModel.Text != null)
+            {
+                request.AddParameter("text", postModel.Text);
+            } 
+            else if (postModel.Url != null)
+            {
+                request.AddParameter("url", postModel.Url);
+            } 
+            if (postModel.FlairText != null && postModel.FlairId != null)
+            {
+                request.AddParameter("flair_id", postModel.FlairId);
+                request.AddParameter("flair_text", postModel.FlairText);
+            }
 
             return (client, request);
         }
