@@ -94,7 +94,7 @@ namespace RestSharpSocialMediaPosts.Services
         private RestRequest FilloutDefaultRequest(RestRequest request, TumblrPostModel postModel, string accessToken)
         {
             request.AddHeader("Authorization", $"Bearer {accessToken}");
-            request.AddHeader("Content-Type", "application/json");
+            request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
 
             request.AddParameter("type", postModel.type);
 
@@ -146,15 +146,23 @@ namespace RestSharpSocialMediaPosts.Services
 
             List<object> contentBlocks = MakeBlogContent(textPostModel);
 
+            // Construct request body
+            var postBody = new
+            {
+                content = contentBlocks,
+            };
+
             // Serialize the entire body to JSON
-            string contentBlocksJson = JsonConvert.SerializeObject(contentBlocks);
+            //string contentBlocksJson = JsonConvert.SerializeObject(postBody);
 
             // Add JSON string to request body
-            request.AddParameter("application/json", contentBlocksJson, ParameterType.RequestBody);
+            //request.AddParameter("application/json", contentBlocksJson, ParameterType.RequestBody);
 
-            request.AddParameter("content", contentBlocks.ToString());
+            request.AddJsonBody(postBody);
 
-            return await Post(client, request);
+            string response = await Post(client, request);
+
+            return response;
         }
 
         private async Task<string?> Post(RestClient client, RestRequest request)
@@ -169,7 +177,7 @@ namespace RestSharpSocialMediaPosts.Services
                 }
                 else
                 {
-                    return $"Error: {response.StatusCode} - {response.StatusDescription}";
+                    return $"Error: {response.StatusCode} - {response.StatusDescription} - {response.Content}";
                 }
             }
             catch (Exception ex)
