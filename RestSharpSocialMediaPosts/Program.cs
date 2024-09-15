@@ -10,6 +10,10 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Sessions
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession();
+
 // Add Services
 builder.Services.AddScoped<IRedditService, RedditService>();
 builder.Services.AddScoped<ITumblrService, TumblrService>();
@@ -22,6 +26,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseSession();
 
 app.UseHttpsRedirection();
 

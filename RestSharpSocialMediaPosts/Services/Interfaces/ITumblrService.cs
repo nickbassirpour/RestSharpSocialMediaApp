@@ -1,11 +1,14 @@
-﻿using RestSharpSocialMediaPosts.Models.Tumblr;
+﻿using RestSharp;
+using RestSharpSocialMediaPosts.Models.Tumblr;
 
 namespace RestSharpSocialMediaPosts.Services.Interfaces
 {
     public interface ITumblrService
     {
-        void MakeOAuth2Request();
+        Task<bool> MakeOAuth2Request();
 
         Task<TumblrAccessTokenModel?> GetAccessToken(string authToken);
+        Task<string> PostTextPost(TumblrTextPostModel textPostModel, string accessToken);
+
     }
 }

@@ -7,15 +7,13 @@ using RestSharpSocialMediaPosts.Models.Tumblr;
 using RestSharpSocialMediaPosts.Services.Interfaces;
 using System.Formats.Asn1;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace RestSharpSocialMediaPosts.Services
 {
     public class TumblrService : ITumblrService
     {
-
-        private string _accessToken;
-
-        public async void MakeOAuth2Request()
+        public async Task<bool> MakeOAuth2Request()
         {
             RestClient client = new RestClient("https://www.tumblr.com/");
             RestRequest request = new RestRequest("oauth2/authorize", Method.Get);
@@ -40,11 +38,12 @@ namespace RestSharpSocialMediaPosts.Services
                     FileName = client.BuildUri(request).ToString(),
                     UseShellExecute = true,
                 });
-
+                return true;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Exception occurred: {ex.Message}");
+                return false;
             }
         }
 
@@ -91,163 +90,92 @@ namespace RestSharpSocialMediaPosts.Services
                 return null;
             }
         }
-        //private async Task<(string?, string?)> GetOAuthToken(string consumerKey, string consumerSecret)
-        //{
-        //    RestClientOptions options = new RestClientOptions("https://www.tumblr.com/")
-        //    {
-        //        Authenticator = OAuth1Authenticator.ForProtectedResource(consumerKey, consumerSecret, null, null, OAuthSignatureMethod.HmacSha1)
-        //    };
 
-        //    var client = new RestClient(options);
+        private RestRequest FilloutDefaultRequest(RestRequest request, TumblrPostModel postModel, string accessToken)
+        {
+            request.AddHeader("Authorization", $"Bearer {accessToken}");
+            request.AddHeader("Content-Type", "application/json");
 
-        //    // The subpath for the authorization request
-        //    RestRequest request = new RestRequest($"oauth/request_token", Method.Post);
+            request.AddParameter("type", postModel.type);
 
-        //    request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
+            if (!string.IsNullOrEmpty(postModel.state))
+                request.AddParameter("state", postModel.state);
+            if (!string.IsNullOrEmpty(postModel.tags))
+                request.AddParameter("tags", postModel.tags);
+            if (!string.IsNullOrEmpty(postModel.tweet))
+                request.AddParameter("tweet", postModel.tweet);
+            if (!string.IsNullOrEmpty(postModel.date))
+                request.AddParameter("date", postModel.date);
+            if (!string.IsNullOrEmpty(postModel.format))
+                request.AddParameter("format", postModel.format);
+            if (!string.IsNullOrEmpty(postModel.slug))
+                request.AddParameter("slug", postModel.slug);
+            if (!string.IsNullOrEmpty(postModel.nativeInlineImages))
+                request.AddParameter("native_inline_images", postModel.nativeInlineImages);
 
-        //    try
-        //    {
-        //        var response = await client.ExecuteAsync(request);
-        //        if (response.IsSuccessful)
-        //        {
-        //            var parsedString = HttpUtility.ParseQueryString(response.Content);
-        //            string oauthToken = parsedString["oauth_token"];
-        //            string oauthTokenSecret = parsedString["oauth_token_secret"];
-        //            Console.WriteLine($"OAuth Token: {oauthToken}");
-        //            Console.WriteLine($"OAuth Token Secret: {oauthTokenSecret}");
-        //            return (oauthToken, oauthTokenSecret);
-        //        }
-        //        else
-        //        {
-        //            Console.WriteLine($"Error: {response.StatusCode}");
-        //            Console.WriteLine($"Content: {response.Content}");
-        //            return (null, null);
-        //        }
+            return request;
+        }
 
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine($"Exception occurred: {ex.Message}");
-        //        return (null, null);
-        //    }
-        //}
+        private List<object> MakeBlogContent(TumblrTextPostModel textModel)
+        {
+            List<object> contentBlocks = new List<object>();
 
-        //public async Task<(string, string, string)> GetOAuthVerifier(string consumerKey, string consumerSecret)
-        //{
-        //    (string? oauthToken, string? oauthTokenSecret) = await GetOAuthToken(consumerKey, consumerSecret);
+            var titleBlock = new
+            {
+                type = "text",
+                subtype = "heading2",
+                text = textModel.title,
+            };
+            var textBlock = new
+            {
+                type = "text",
+                text = textModel.body
+            };
 
-        //    string authURL = $"https://www.tumblr.com/oauth/authorize?oauth_token={oauthToken}";
-        //    Console.WriteLine("Please visit the following URL to authorize the application:");
-        //    Console.WriteLine(authURL);
-        //    System.Diagnostics.Process.Start(new ProcessStartInfo
-        //    {
-        //        FileName = authURL,
-        //        UseShellExecute = true,
-        //    });
-        //    Console.WriteLine("Once you agree to giving access, grab the oauth_verifier GUID in the URL and paste it here: ");
-        //    string oauthVerifier = Console.ReadLine();
+            contentBlocks.Add(titleBlock);
+            contentBlocks.Add(textBlock);
 
-        //    return (oauthToken, oauthTokenSecret, oauthVerifier);
-        //}
+            return contentBlocks;
+        }
 
-        //public static async Task<string?> GetAccessToken(string consumerKey, string consumerSecret, string oauthToken, string oauthSecret, string oauthVerifier)
-        //{
-        //    RestClientOptions options = new RestClientOptions("https://www.tumblr.com/")
-        //    {
-        //        Authenticator = OAuth1Authenticator.ForAccessToken(
+        public async Task<string> PostTextPost(TumblrTextPostModel textPostModel, string accessToken)
+        {
+            RestClient client = new RestClient($"https://api.tumblr.com/");
+            RestRequest unfilledRequest = new RestRequest($"v2/blog/{textPostModel.blogId}/posts", Method.Post);
+            RestRequest request = FilloutDefaultRequest(unfilledRequest, textPostModel, accessToken);
 
-        //            consumerKey,
-        //            consumerSecret,
-        //            oauthToken,
-        //            oauthSecret,
-        //            oauthVerifier)
-        //    };
+            List<object> contentBlocks = MakeBlogContent(textPostModel);
 
-        //    RestClient client = new RestClient(options);
-        //    RestRequest request = new RestRequest("oauth/access_token", Method.Post);
+            // Serialize the entire body to JSON
+            string contentBlocksJson = JsonConvert.SerializeObject(contentBlocks);
 
-        //    request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
+            // Add JSON string to request body
+            request.AddParameter("application/json", contentBlocksJson, ParameterType.RequestBody);
 
-        //    try
-        //    {
-        //        var response = await client.ExecuteAsync(request);
-        //        if (response.IsSuccessful)
-        //        {
-        //            var parsedContent = HttpUtility.ParseQueryString(response.Content);
-        //            string accessToken = parsedContent["oauth_token"]?.ToString();
-        //            Console.WriteLine($"Your access token: {accessToken}");
-        //            return accessToken;
-        //        }
-        //        else
-        //        {
-        //            Console.WriteLine($"Error: {response.ErrorMessage}");
-        //            Console.WriteLine($"Content: {response.Content}");
-        //            return null;
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine($"Exception occurred: {ex.Message}");
-        //        return null;
-        //    }
-        //}
+            request.AddParameter("content", contentBlocks.ToString());
 
-        //private RestRequest FilloutDefaultRequest(RestRequest request, TumblrPostModel postModel)
-        //{
-        //    request.AddHeader("Authorization: ", $"Bearer {_accessToken}");
-        //    request.AddHeader("Content-Type", "application/json");
+            return await Post(client, request);
+        }
 
-        //    request.AddParameter("type", postModel.Type);
+        private async Task<string?> Post(RestClient client, RestRequest request)
+        {
+            try
+            {
+                var response = await client.ExecuteAsync(request);
 
-        //    if (!string.IsNullOrEmpty(postModel.State))
-        //        request.AddParameter("state", postModel.State);
-        //    if (!string.IsNullOrEmpty(postModel.Tags))
-        //        request.AddParameter("tags", postModel.Tags);
-        //    if (!string.IsNullOrEmpty(postModel.Tweet))
-        //        request.AddParameter("tweet", postModel.Tweet);
-        //    if (!string.IsNullOrEmpty(postModel.Date))
-        //        request.AddParameter("date", postModel.Date);
-        //    if (!string.IsNullOrEmpty(postModel.Format))
-        //        request.AddParameter("format", postModel.Format);
-        //    if (!string.IsNullOrEmpty(postModel.Slug))
-        //        request.AddParameter("slug", postModel.Slug);
-        //    if (!string.IsNullOrEmpty(postModel.NativeInlineImages))
-        //        request.AddParameter("native_inline_images", postModel.NativeInlineImages);
-
-        //    return request;
-        //}
-
-        //public async Task<string> PostTextPost(TumblrTextPostModel textPostModel)
-        //{
-        //    RestClient client = new RestClient($"https://api.tumblr.com/");
-        //    RestRequest unfilledRequest = new RestRequest($"v2/blog/{textPostModel.BlogId}/posts", Method.Post);
-        //    RestRequest request = FilloutDefaultRequest(unfilledRequest, textPostModel);
-
-        //    request.AddParameter("title", textPostModel.Title);
-        //    request.AddParameter("body", textPostModel.Body);
-
-        //    return await Post(client, request);
-        //}
-
-        //private async Task<string> Post(RestClient client, RestRequest request)
-        //{
-        //    try
-        //    {
-        //        var response = await client.ExecuteAsync(request);
-
-        //        if (response.IsSuccessful)
-        //        {
-        //            return $"Success: {response.Content}";
-        //        }
-        //        else
-        //        {
-        //            return $"Error: {response.StatusCode} - {response.StatusDescription}";
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return $"Exception occurred: {ex.Message}";
-        //    }
-        //}
+                if (response.IsSuccessful)
+                {
+                    return $"Success: {response.Content}";
+                }
+                else
+                {
+                    return $"Error: {response.StatusCode} - {response.StatusDescription}";
+                }
+            }
+            catch (Exception ex)
+            {
+                return $"Exception occurred: {ex.Message}";
+            }
+        }
     }
 }
