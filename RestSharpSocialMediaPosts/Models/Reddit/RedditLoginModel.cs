@@ -9,10 +9,10 @@ namespace RestSharpSocialMediaPosts.Models.Reddit
     public class RedditLoginModel
     {
 
-        public string ClientId { get; set; }
-        public string ClientSecret { get; set; }
-        public string Username { get; set; }
-        public string Password { get; set; }
+        public string ClientId { get; set; } = "F4jNvO2-A75lo2jxB08g7g";
+        public string ClientSecret { get; set; } = "03gFLr-6QnZl8fBZVW1pCczv1pZiyA";
+        public string Username { get; set; } = "devtestercsharp";
+        public string Password { get; set; } = "Come2MyGarden";
 
     }
 }

@@ -8,7 +8,7 @@ namespace RestSharpSocialMediaPosts.Models.Tumblr
 {
     public class TumblrTextPostModel : TumblrPostModel
     {
-        public string title { get; set; }
+        public string? title { get; set; }
         public string body { get; set; }
     }
 }

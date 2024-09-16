@@ -10,9 +10,9 @@ namespace RestSharpSocialMediaPosts.Models.Tumblr
 {
     public class TumblrPostModel
     {
-        public string blogId { get; set; }
+        public string blogId { get; set; } = "devtestercsharp";
         [RegularExpression("text|photo|quote|link|chat|audio|video", ErrorMessage = "Invalid Post Type")]
-        public string? type { get; set; }
+        public string type { get; set; }
         [RegularExpression("published|draft|queue|private", ErrorMessage = "Invalid Post State")]
         public string? state { get; set; }
         public string? tags { get; set; }

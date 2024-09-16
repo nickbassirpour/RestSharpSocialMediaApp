@@ -116,49 +116,17 @@ namespace RestSharpSocialMediaPosts.Services
             return request;
         }
 
-        private List<object> MakeBlogContent(TumblrTextPostModel textModel)
-        {
-            List<object> contentBlocks = new List<object>();
-
-            var titleBlock = new
-            {
-                type = "text",
-                subtype = "heading2",
-                text = textModel.title,
-            };
-            var textBlock = new
-            {
-                type = "text",
-                text = textModel.body
-            };
-
-            contentBlocks.Add(titleBlock);
-            contentBlocks.Add(textBlock);
-
-            return contentBlocks;
-        }
-
         public async Task<string> PostTextPost(TumblrTextPostModel textPostModel, string accessToken)
         {
             RestClient client = new RestClient($"https://api.tumblr.com/");
-            RestRequest unfilledRequest = new RestRequest($"v2/blog/{textPostModel.blogId}/posts", Method.Post);
+            RestRequest unfilledRequest = new RestRequest($"v2/blog/{textPostModel.blogId}/post", Method.Post);
             RestRequest request = FilloutDefaultRequest(unfilledRequest, textPostModel, accessToken);
 
-            List<object> contentBlocks = MakeBlogContent(textPostModel);
-
-            // Construct request body
-            var postBody = new
+            if (textPostModel.title != null)
             {
-                content = contentBlocks,
-            };
-
-            // Serialize the entire body to JSON
-            //string contentBlocksJson = JsonConvert.SerializeObject(postBody);
-
-            // Add JSON string to request body
-            //request.AddParameter("application/json", contentBlocksJson, ParameterType.RequestBody);
-
-            request.AddJsonBody(postBody);
+                request.AddParameter("title", textPostModel.title);
+            }
+            request.AddParameter("body", textPostModel.body);
 
             string response = await Post(client, request);
 

@@ -48,8 +48,8 @@ namespace RestSharpSocialMediaPosts.Controllers
                 TumblrAccessTokenModel? tokenModel = await _service.GetAccessToken(code);
                 if (tokenModel != null)
                 {
-                    HttpContext.Session.SetString("AccessToken", tokenModel.AccessToken);
-                    HttpContext.Session.SetString("ExpiresIn", tokenModel.ExpiresIn);
+                    HttpContext.Session.SetString("TumblrAccessToken", tokenModel.AccessToken);
+                    HttpContext.Session.SetString("TumblrExpiresIn", tokenModel.ExpiresIn);
                     return StatusCode(201, tokenModel.AccessToken);
                 }
                 else
@@ -69,7 +69,7 @@ namespace RestSharpSocialMediaPosts.Controllers
         {
             try
             {
-                string? accessToken = HttpContext.Session.GetString("AccessToken");
+                string? accessToken = HttpContext.Session.GetString("TumblrAccessToken");
 
                 if (accessToken == null)
                 {

@@ -35,12 +35,18 @@ namespace RestSharpSocialMediaPosts.Services
                 var (client, request) = FillOutLoginRequest(loginModel);
                 var response = await client.ExecuteAsync(request);
 
-                if (response.IsSuccessful)
+                if (response != null && response.IsSuccessful)
                 {
                     var json = JObject.Parse(response.Content);
-                    string access_token = json["access_token"]?.ToString();
-                    Console.WriteLine(access_token);
-                    return access_token;
+                    if (json != null)
+                    {
+                        string? access_token = json["access_token"]?.ToString();
+                        return access_token;
+                    }
+                    else
+                    {
+                        return null;
+                    }
                 }
                 else
                 {

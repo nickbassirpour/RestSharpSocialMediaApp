@@ -9,8 +9,8 @@ namespace RestSharpSocialMediaPosts.Models.Reddit
 {
     public class RedditPostModel
     {
-        public string UserName { get; set; }
-        public string AppName { get; set; }
+        public string UserName { get; set; } = "devtestercsharp";
+        public string AppName { get; set; } = "devtestercsharp";
         [StringLength(300)]
         public string Title { get; set; }
         public string? Text { get; set; }
