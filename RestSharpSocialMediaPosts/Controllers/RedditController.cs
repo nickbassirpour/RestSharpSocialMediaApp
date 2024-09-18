@@ -15,21 +15,66 @@ namespace RestSharpSocialMediaPosts.Controllers
         }
 
         [AllowAnonymous]
-        [HttpPost("login")]
+        [HttpGet("reddit_request_permission")]
+        public async Task<IActionResult> RequestPermission()
+        {
+            try
+            {
+                bool success = await _service.MakeOAuth2Request();
+                if (success)
+                {
+                    return StatusCode(201);
+                }
+                else
+                {
+                    return BadRequest();
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpGet("reddit_get_token")]
+        public async Task<IActionResult> GetAccessToken(string code, string state)
+        {
+            try
+            {
+                
+                if (code != null && state != null)
+                {
+                    return StatusCode(201);
+                }
+                else
+                {
+                    return BadRequest();
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpPost("reddit_login")]
         public async Task<IActionResult> Login(RedditLoginModel loginModel)
         {
             int code = 200;
             
             try
             {
-                string? accessToken = await _service.GetAccessToken(loginModel);
-                if (accessToken == null)
+                (string? accessToken, string? refreshToken) = await _service.GetAccessToken(loginModel);
+                if (accessToken == null || refreshToken == null)
                 {
                     return BadRequest("An error occurred");
                 }
                 else
                 {
                     HttpContext.Session.SetString("redditAccessToken", accessToken);
+                    HttpContext.Session.SetString("redditRefreshToken", refreshToken);
                     return Ok(accessToken);
                 }
             }

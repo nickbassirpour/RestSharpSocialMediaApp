@@ -18,7 +18,7 @@ namespace RestSharpSocialMediaPosts.Controllers
         }
 
         [AllowAnonymous]
-        [HttpGet("request_permission")]
+        [HttpGet("tumblr_request_permission")]
         public async Task<IActionResult?> RequestPermission()
         {
             try
@@ -40,7 +40,7 @@ namespace RestSharpSocialMediaPosts.Controllers
         }
 
         [AllowAnonymous]
-        [HttpGet("get_token")]
+        [HttpGet("tumblr_get_token")]
         public async Task<IActionResult> GetAccessToken(string code, string state)
         {
             try

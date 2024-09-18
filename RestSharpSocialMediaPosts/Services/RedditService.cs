@@ -2,12 +2,15 @@
 using RestSharp;
 using RestSharpSocialMediaPosts.Models.Reddit;
 using RestSharpSocialMediaPosts.Services.Interfaces;
+using System.Diagnostics;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 
 namespace RestSharpSocialMediaPosts.Services
 {
     public class RedditService : IRedditService
     {
+        string _state = Guid.NewGuid().ToString();
         private (RestClient, RestRequest) FillOutLoginRequest(RedditLoginModel loginModel)
         {
             // Base URL for Reddit
@@ -22,13 +25,14 @@ namespace RestSharpSocialMediaPosts.Services
 
             // Add Parameters
             request.AddParameter("grant_type", "password");
+            request.AddParameter("duration", "permanent");
             request.AddParameter("username", loginModel.Username);
             request.AddParameter("password", loginModel.Password);
 
             return (client, request);
         }
 
-        public async Task<string?> GetAccessToken(RedditLoginModel loginModel)
+        public async Task<(string?, string?)> GetAccessToken(RedditLoginModel loginModel)
         {
             try
             {
@@ -41,24 +45,62 @@ namespace RestSharpSocialMediaPosts.Services
                     if (json != null)
                     {
                         string? access_token = json["access_token"]?.ToString();
-                        return access_token;
+                        string? refresh_token = json["refresh_token"]?.ToString();
+                        return (access_token, refresh_token);
                     }
                     else
                     {
-                        return null;
+                        return (null, null);
                     }
                 }
                 else
                 {
                     Console.WriteLine($"Error: {response.StatusCode}");
                     Console.WriteLine($"Content: {response.Content}");
-                    return null;
+                    return (null, null);
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Exception occurred: {ex.Message}");
-                return null;
+                return (null, null);
+            }
+        }
+
+        public async Task<bool> MakeOAuth2Request()
+        {
+            // Base URL for Reddit
+            RestClient client = new RestClient("https://www.reddit.com");
+
+            // The subpath for the access token request
+            RestRequest request = new RestRequest("/api/v1/authorize", Method.Get);
+
+            RedditAuthModel authModel = new RedditAuthModel();
+
+            // Add Parameters
+            request.AddParameter("client_id", authModel.ClientId);
+            request.AddParameter("response_type", "code");
+            request.AddParameter("duration", "permanent");
+            request.AddParameter("state", _state);
+            request.AddParameter("scope", authModel.Scope);
+            if (authModel.RedirectUri != null)
+            {
+                request.AddParameter("redirect_uri", authModel.RedirectUri);
+            }
+
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = client.BuildUri(request).ToString(),
+                    UseShellExecute = true,
+                });
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception occurred: {ex.Message}");
+                return false;
             }
         }
 

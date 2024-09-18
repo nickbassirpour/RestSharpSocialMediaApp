@@ -33,7 +33,7 @@ namespace RestSharpSocialMediaPosts.Services
 
             try
             {
-                System.Diagnostics.Process.Start(new ProcessStartInfo
+                Process.Start(new ProcessStartInfo
                 {
                     FileName = client.BuildUri(request).ToString(),
                     UseShellExecute = true,
