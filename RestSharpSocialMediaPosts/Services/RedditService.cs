@@ -77,8 +77,10 @@ namespace RestSharpSocialMediaPosts.Services
 
             RedditAuthModel authModel = new RedditAuthModel();
 
+            string clientId = Environment.GetEnvironmentVariable("reddit_client_id");
+
             // Add Parameters
-            request.AddParameter("client_id", authModel.ClientId);
+            request.AddParameter("client_id", clientId);
             request.AddParameter("response_type", "code");
             request.AddParameter("duration", "permanent");
             request.AddParameter("state", _state);

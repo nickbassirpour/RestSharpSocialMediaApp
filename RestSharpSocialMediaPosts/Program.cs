@@ -1,5 +1,8 @@
 using RestSharpSocialMediaPosts.Services;
 using RestSharpSocialMediaPosts.Services.Interfaces;
+using DotNetEnv;
+
+Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
