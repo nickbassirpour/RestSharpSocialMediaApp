@@ -10,7 +10,16 @@ namespace RestSharpSocialMediaPosts.Services
 {
     public class RedditService : IRedditService
     {
+        private readonly HttpContextAccessor _httpContextAccessor;
         string _state = Guid.NewGuid().ToString();
+        string clientId = Environment.GetEnvironmentVariable("reddit_client_id");
+        string clientSecret = Environment.GetEnvironmentVariable("reddit_client_secret");
+        private Timer _refreshTokenTimer;
+
+        public RedditService(HttpContextAccessor httpContextAccessor)
+        {
+            httpContextAccessor = _httpContextAccessor;
+        }
         private (RestClient, RestRequest) FillOutLoginRequest(string authToken)
         {
             // Base URL for Reddit
@@ -20,8 +29,6 @@ namespace RestSharpSocialMediaPosts.Services
             RestRequest request = new RestRequest("/api/v1/access_token", Method.Post);
 
             string redirectURI = Environment.GetEnvironmentVariable("reddit_redirect_uri");
-            string clientId = Environment.GetEnvironmentVariable("reddit_client_id");
-            string clientSecret = Environment.GetEnvironmentVariable("reddit_client_secret");
 
             // Add headers
             request.AddHeader("Authorization", "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{clientId}:{clientSecret}")));
@@ -35,6 +42,14 @@ namespace RestSharpSocialMediaPosts.Services
             request.AddParameter("redirect_uri", redirectURI);
 
             return (client, request);
+        }
+
+        public void StartTokenTimer()
+        {
+            _refreshTokenTimer = new Timer(async state =>
+            {
+               await RefreshToken();
+            }, null, TimeSpan.FromHours(1), Timeout.InfiniteTimeSpan);
         }
 
         public async Task<(string?, string?)> GetAccessToken(string authToken, string stateToCompare)
@@ -159,6 +174,16 @@ namespace RestSharpSocialMediaPosts.Services
             {
                 Console.WriteLine(submitResponse.Content);
                 return $"Error: {submitResponse.StatusCode}";
+            }
+        }
+        private async Task RefreshToken()
+        {
+            string? refreshToken = _httpContextAccessor.HttpContext.Session.GetString("redditRefreshToken");
+
+            if (refreshToken != null)
+            {
+                // Call your refresh token method and update HttpContext.Session with new tokens
+                // Update access token in session
             }
         }
     }
