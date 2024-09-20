@@ -42,9 +42,9 @@ namespace RestSharpSocialMediaPosts.Controllers
         {
             try
             {
-                
                 if (code != null && state != null)
                 {
+                    (string? accessToken, string? refreshToken) = await _service.GetAccessToken(code, state);
                     return StatusCode(201);
                 }
                 else
@@ -58,31 +58,31 @@ namespace RestSharpSocialMediaPosts.Controllers
             }
         }
 
-        [AllowAnonymous]
-        [HttpPost("reddit_login")]
-        public async Task<IActionResult> Login(RedditLoginModel loginModel)
-        {
-            int code = 200;
+        //[AllowAnonymous]
+        //[HttpPost("reddit_login")]
+        //public async Task<IActionResult> Login(RedditLoginModel loginModel)
+        //{
+        //    int code = 200;
             
-            try
-            {
-                (string? accessToken, string? refreshToken) = await _service.GetAccessToken(loginModel);
-                if (accessToken == null || refreshToken == null)
-                {
-                    return BadRequest("An error occurred");
-                }
-                else
-                {
-                    HttpContext.Session.SetString("redditAccessToken", accessToken);
-                    HttpContext.Session.SetString("redditRefreshToken", refreshToken);
-                    return Ok(accessToken);
-                }
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
+        //    try
+        //    {
+        //        (string? accessToken, string? refreshToken) = await _service.GetAccessToken(loginModel);
+        //        if (accessToken == null || refreshToken == null)
+        //        {
+        //            return BadRequest("An error occurred");
+        //        }
+        //        else
+        //        {
+        //            HttpContext.Session.SetString("redditAccessToken", accessToken);
+        //            HttpContext.Session.SetString("redditRefreshToken", refreshToken);
+        //            return Ok(accessToken);
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ex.Message);
+        //    }
+        //}
 
         [AllowAnonymous]
         [HttpPost("post_thread")]

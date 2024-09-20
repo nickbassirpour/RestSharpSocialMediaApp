@@ -11,7 +11,7 @@ namespace RestSharpSocialMediaPosts.Services
     public class RedditService : IRedditService
     {
         string _state = Guid.NewGuid().ToString();
-        private (RestClient, RestRequest) FillOutLoginRequest(RedditLoginModel loginModel)
+        private (RestClient, RestRequest) FillOutLoginRequest(string authToken)
         {
             // Base URL for Reddit
             RestClient client = new RestClient("https://www.reddit.com");
@@ -19,24 +19,29 @@ namespace RestSharpSocialMediaPosts.Services
             // The subpath for the access token request
             RestRequest request = new RestRequest("/api/v1/access_token", Method.Post);
 
+            string redirectURI = Environment.GetEnvironmentVariable("reddit_redirect_uri");
+            string clientId = Environment.GetEnvironmentVariable("reddit_client_id");
+            string clientSecret = Environment.GetEnvironmentVariable("reddit_client_secret");
+
             // Add headers
-            request.AddHeader("Authorization", "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{loginModel.ClientId}:{loginModel.ClientSecret}")));
+            request.AddHeader("Authorization", "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{clientId}:{clientSecret}")));
             request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
 
+
             // Add Parameters
-            request.AddParameter("grant_type", "password");
+            request.AddParameter("grant_type", "authorization_code");
             request.AddParameter("duration", "permanent");
-            request.AddParameter("username", loginModel.Username);
-            request.AddParameter("password", loginModel.Password);
+            request.AddParameter("code", authToken);
+            request.AddParameter("redirect_uri", redirectURI);
 
             return (client, request);
         }
 
-        public async Task<(string?, string?)> GetAccessToken(RedditLoginModel loginModel)
+        public async Task<(string?, string?)> GetAccessToken(string authToken, string stateToCompare)
         {
             try
             {
-                var (client, request) = FillOutLoginRequest(loginModel);
+                var (client, request) = FillOutLoginRequest(authToken);
                 var response = await client.ExecuteAsync(request);
 
                 if (response != null && response.IsSuccessful)
