@@ -17,16 +17,16 @@
 <h4>Step 2: Add env variables</h4>
 <p>Navigate to the apps for both reddit and tumblr and copy/paste the keys to a .env file located in the root of your project.</p>
 <p>Use these variables which are already being used in the app:</p>
-tumblr_consumer_key
-tumblr_consumer_secret
-reddit_client_id
+tumblr_consumer_key,
+tumblr_consumer_secret,
+reddit_client_id,
 reddit_client_secret
 
 <h4>Step 3: Add redirect uri to .env file</h4>
 <p>Add the reddit redirect uri that you previously used in registering the reddit app to your .env file.</p>
-Set the reddit redirect uri to this localhost address with this variable name: reddit_redirect_uri
-(reddit requires it in their requests to verify it is the same as the app but tumblr does not. Feel free to add the same tumblr redirect here as well).
+<p>Set the reddit redirect uri to this localhost address with this variable name: reddit_redirect_uri</p>
+<p>(reddit requires it in their requests to verify it is the same as the app but tumblr does not. Feel free to add the same tumblr redirect here as well).</p>
 
 <h4>Step 4: Use the app</h4>
-To use the app, turn it on, click the request permission for either api, agree to let them use permission, and then start posting.
-You'll receive an access token that will be used to make requests and a refresh token that will be used automatically after 1 hour to get a new access token if you are still using the app.
+<p>To use the app, turn it on, click the request permission for either api, agree to let them use permission, and then start posting.</p>
+<p>You'll receive an access token that will be used to make requests and a refresh token that will be used automatically after 1 hour to get a new access token if you are still using the app.</p>
