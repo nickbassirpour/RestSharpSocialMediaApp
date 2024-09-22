@@ -6,8 +6,6 @@ Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddHttpContextAccessor();
-
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -22,6 +20,7 @@ builder.Services.AddSession();
 // Add Services
 builder.Services.AddScoped<IRedditService, RedditService>();
 builder.Services.AddScoped<ITumblrService, TumblrService>();
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 

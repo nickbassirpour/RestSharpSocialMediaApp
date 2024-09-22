@@ -10,16 +10,17 @@ namespace RestSharpSocialMediaPosts.Services
 {
     public class RedditService : IRedditService
     {
-        private readonly HttpContextAccessor _httpContextAccessor;
-        string _state = Guid.NewGuid().ToString();
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private static string _state = Guid.NewGuid().ToString();
         string clientId = Environment.GetEnvironmentVariable("reddit_client_id");
         string clientSecret = Environment.GetEnvironmentVariable("reddit_client_secret");
         private Timer _refreshTokenTimer;
 
-        public RedditService(HttpContextAccessor httpContextAccessor)
+        public RedditService(IHttpContextAccessor httpContextAccessor)
         {
-            httpContextAccessor = _httpContextAccessor;
+            _httpContextAccessor = _httpContextAccessor;
         }
+
         private (RestClient, RestRequest) FillOutLoginRequest(string authToken)
         {
             // Base URL for Reddit
@@ -54,6 +55,11 @@ namespace RestSharpSocialMediaPosts.Services
 
         public async Task<(string?, string?)> GetAccessToken(string authToken, string stateToCompare)
         {
+            if (stateToCompare != _state)
+            {
+                return ("Potential CSRF Attack. Ending program.", null);
+            }
+
             try
             {
                 var (client, request) = FillOutLoginRequest(authToken);
@@ -176,14 +182,51 @@ namespace RestSharpSocialMediaPosts.Services
                 return $"Error: {submitResponse.StatusCode}";
             }
         }
-        private async Task RefreshToken()
+
+        private async Task<(string?, string?)> RefreshToken()
         {
             string? refreshToken = _httpContextAccessor.HttpContext.Session.GetString("redditRefreshToken");
 
             if (refreshToken != null)
             {
-                // Call your refresh token method and update HttpContext.Session with new tokens
-                // Update access token in session
+                RestClient client = new RestClient("https://reddit.com/");
+                RestRequest request = new RestRequest("/api/v1/access_token");
+
+                request.AddHeader("Authorization", "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{clientId}:{clientSecret}")));
+
+                request.AddParameter("grant_type", "refresh_token");
+                request.AddParameter("refresh_token", refreshToken);
+
+                try
+                {
+                    var response = await client.ExecuteAsync(request);
+                    if (response.IsSuccessful)
+                    {
+                        var json = JObject.Parse(response.Content);
+                        if (json != null)
+                        {
+                            string newAccessToken = json["access_token"].ToString();
+                            string newRefresthToken = json["refresh_token"].ToString();
+                            return (newAccessToken, newRefresthToken);
+                        }
+                        else
+                        {
+                            return (null, null);
+                        }
+                    }
+                    else
+                    {
+                        return (null, null);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return (ex.Message, null);
+                }
+            }
+            else
+            {
+                return (null, null);
             }
         }
     }

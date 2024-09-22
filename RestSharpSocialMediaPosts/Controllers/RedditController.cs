@@ -45,6 +45,10 @@ namespace RestSharpSocialMediaPosts.Controllers
                 if (code != null && state != null)
                 {
                     (string? accessToken, string? refreshToken) = await _service.GetAccessToken(code, state);
+                    HttpContext.Session.SetString("redditAccessToken", accessToken);
+                    HttpContext.Session.SetString("redditRefreshToken", refreshToken);
+
+                    _service.StartTokenTimer();
                     return StatusCode(201);
                 }
                 else
@@ -63,7 +67,7 @@ namespace RestSharpSocialMediaPosts.Controllers
         //public async Task<IActionResult> Login(RedditLoginModel loginModel)
         //{
         //    int code = 200;
-            
+
         //    try
         //    {
         //        (string? accessToken, string? refreshToken) = await _service.GetAccessToken(loginModel);
