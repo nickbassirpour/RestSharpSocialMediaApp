@@ -12,7 +12,7 @@ For instructions on how the api works, <a href=https://www.tumblr.com/docs/en/ap
 
 
 <h4>Step 2: Add env variables</h4>
-<p>Navigate to the apps for both reddit and tumblr and copy/paste the keys to a .env file located in the root of your project.</p>
+<p>Navigate to the apps for both reddit and tumblr and copy/paste the keys that were generated after registration to a .env file located in the root of your project.</p>
 <p>Use these variables which are already being used in the app:</p>
 tumblr_consumer_key,
 tumblr_consumer_secret,
