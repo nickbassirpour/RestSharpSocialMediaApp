@@ -4,13 +4,11 @@
 <h4>Step 1: Register apps</h4>
 <p>Register apps on both reddit and tumblr. </p>
 
-<p>For reddit, use the below link for instructions on registering an app. You can also find a complete guide for how the api works:</p>
-<p><a href=https://github.com/reddit-archive/reddit/wiki/OAuth2>https://github.com/reddit-archive/reddit/wiki/OAuth2</a>The redirect uri should be your localhost port address found in your launchSettings.json file with /reddit_get_token as the end route.</p>
+<p>For reddit, <a href=https://github.com/reddit-archive/reddit/wiki/OAuth2>click here </a>for instructions on registering an app and how the api works. The redirect uri should be your localhost port address found in your launchSettings.json file with /reddit_get_token as the end route.</p>
 
-<p>For tumblr, click the below link to register an app:
-<a href=https://www.tumblr.com/oauth/apps></a>https://www.tumblr.com/oauth/apps</a>
-The redirect uri should be the same local host port address with /tumblr_get_token as the end route.</p>
-For instructions on how the api works, click <a href=https://www.tumblr.com/docs/en/api/v2>here</a></p>
+<p>For tumblr, <a href=https://www.tumblr.com/oauth/apps>click here </a>the below link to register an app:
+The redirect uri should be the same local host port address with /tumblr_get_token as the end route.
+For instructions on how the api works, <a href=https://www.tumblr.com/docs/en/api/v2>click here</a></p>
 
 
 <h4>Step 2: Add env variables</h4>
