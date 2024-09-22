@@ -5,7 +5,7 @@
 <p>Register apps on both reddit and tumblr. </p>
 
 <p>For reddit, use the below link for instructions on registering an app. You can also find a complete guide for how the api works:</p>
-<a>https://github.com/reddit-archive/reddit/wiki/OAuth2</a>
+<a href=https://github.com/reddit-archive/reddit/wiki/OAuth2>https://github.com/reddit-archive/reddit/wiki/OAuth2</a>
 <p>The redirect uri should be your localhost port address found in your launchSettings.json file with /reddit_get_token as the end route.</p>
 
 <p>For tumblr, click the below link to register an app:</p>
