@@ -1,10 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RestSharpSocialMediaPosts.Models.Reddit;
-using RestSharpSocialMediaPosts.Services;
-using RestSharpSocialMediaPosts.Services.Interfaces;
+using RestSharpSocialMediaPosts.Reddit.Models;
+using RestSharpSocialMediaPosts.Reddit.Services.Interfaces;
 
-namespace RestSharpSocialMediaPosts.Controllers
+namespace RestSharpSocialMediaPosts.Reddit.Controllers
 {
     public class RedditController : ControllerBase
     {
@@ -42,19 +41,16 @@ namespace RestSharpSocialMediaPosts.Controllers
         {
             try
             {
-                if (code != null && state != null)
-                {
-                    (string? accessToken, string? refreshToken) = await _service.GetAccessToken(code, state);
-                    HttpContext.Session.SetString("redditAccessToken", accessToken);
-                    HttpContext.Session.SetString("redditRefreshToken", refreshToken);
-
-                    _service.StartTokenTimer();
-                    return StatusCode(201);
-                }
-                else
+                if (code == null || state == null)
                 {
                     return BadRequest();
                 }
+                (string? accessToken, string? refreshToken) = await _service.GetAccessToken(code, state);
+                HttpContext.Session.SetString("redditAccessToken", accessToken);
+                HttpContext.Session.SetString("redditRefreshToken", refreshToken);
+
+                _service.StartTokenTimer();
+                return StatusCode(201);
             }
             catch (Exception ex)
             {
@@ -93,30 +89,26 @@ namespace RestSharpSocialMediaPosts.Controllers
         public async Task<IActionResult> Post(RedditPostModel postModel)
         {
             int code = 201;
-            string? accessToken = HttpContext.Session.GetString("redditAccessToken"); 
+            string? accessToken = HttpContext.Session.GetString("redditAccessToken");
 
-            if (accessToken != null)
-            {
-                try
-                {
-                    string? result = await _service.SubmitPost(postModel, accessToken);
-                    if (result != null)
-                    {
-                        return StatusCode(code, result);
-                    }
-                    else
-                    {
-                        return BadRequest();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    return BadRequest(ex.Message);
-                }
-            }
-            else
+            if (accessToken == null)
             {
                 return Unauthorized();
+            }
+            
+            try
+            {
+                string? result = await _service.SubmitPost(postModel, accessToken);
+                if (result == null)
+                {
+                    return BadRequest();
+                }
+                return StatusCode(code, result);
+                    
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
             }
         }
 

@@ -1,12 +1,13 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Microsoft.Extensions.Logging.Abstractions;
+using Newtonsoft.Json.Linq;
 using RestSharp;
-using RestSharpSocialMediaPosts.Models.Reddit;
-using RestSharpSocialMediaPosts.Services.Interfaces;
+using RestSharpSocialMediaPosts.Reddit.Models;
+using RestSharpSocialMediaPosts.Reddit.Services.Interfaces;
 using System.Diagnostics;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
 
-namespace RestSharpSocialMediaPosts.Services
+namespace RestSharpSocialMediaPosts.Reddit.Services
 {
     public class RedditService : IRedditService
     {
@@ -49,7 +50,7 @@ namespace RestSharpSocialMediaPosts.Services
         {
             _refreshTokenTimer = new Timer(async state =>
             {
-               await RefreshToken();
+                await RefreshToken();
             }, null, TimeSpan.FromHours(1), Timeout.InfiniteTimeSpan);
         }
 
@@ -153,11 +154,11 @@ namespace RestSharpSocialMediaPosts.Services
             if (postModel.Text != null)
             {
                 request.AddParameter("text", postModel.Text);
-            } 
+            }
             else if (postModel.Url != null)
             {
                 request.AddParameter("url", postModel.Url);
-            } 
+            }
             if (postModel.FlairText != null && postModel.FlairId != null)
             {
                 request.AddParameter("flair_id", postModel.FlairId);
@@ -187,8 +188,11 @@ namespace RestSharpSocialMediaPosts.Services
         {
             string? refreshToken = _httpContextAccessor.HttpContext.Session.GetString("redditRefreshToken");
 
-            if (refreshToken != null)
+            if (refreshToken == null)
             {
+                return (null, null);
+            }
+
                 RestClient client = new RestClient("https://reddit.com/");
                 RestRequest request = new RestRequest("/api/v1/access_token");
 
@@ -197,37 +201,30 @@ namespace RestSharpSocialMediaPosts.Services
                 request.AddParameter("grant_type", "refresh_token");
                 request.AddParameter("refresh_token", refreshToken);
 
-                try
-                {
-                    var response = await client.ExecuteAsync(request);
-                    if (response.IsSuccessful)
-                    {
-                        var json = JObject.Parse(response.Content);
-                        if (json != null)
-                        {
-                            string newAccessToken = json["access_token"].ToString();
-                            string newRefresthToken = json["refresh_token"].ToString();
-                            return (newAccessToken, newRefresthToken);
-                        }
-                        else
-                        {
-                            return (null, null);
-                        }
-                    }
-                    else
-                    {
-                        return (null, null);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    return (ex.Message, null);
-                }
-            }
-            else
+            try
             {
-                return (null, null);
+                var response = await client.ExecuteAsync(request);
+                if (!response.IsSuccessful)
+                {
+                    return (null, null);
+                }
+
+                var json = JObject.Parse(response.Content);
+                if (json == null)
+                {
+                    return (null, null);
+                }
+
+                string newAccessToken = json["access_token"].ToString();
+                string newRefreshToken = json["refresh_token"].ToString();
+                return (newAccessToken, newRefreshToken);
+               
+                }
+            catch (Exception ex)
+            {
+                return (ex.Message, null);
             }
+           
         }
     }
 }

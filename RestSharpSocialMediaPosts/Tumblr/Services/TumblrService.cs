@@ -3,13 +3,13 @@ using RestSharp.Authenticators;
 using RestSharp;
 using System.Diagnostics;
 using System.Web;
-using RestSharpSocialMediaPosts.Models.Tumblr;
-using RestSharpSocialMediaPosts.Services.Interfaces;
 using System.Formats.Asn1;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
+using RestSharpSocialMediaPosts.Tumblr.Services.Interfaces;
+using RestSharpSocialMediaPosts.Tumblr.Models;
 
-namespace RestSharpSocialMediaPosts.Services
+namespace RestSharpSocialMediaPosts.Tumblr.Services
 {
     public class TumblrService : ITumblrService
     {
@@ -63,29 +63,25 @@ namespace RestSharpSocialMediaPosts.Services
             try
             {
                 var response = await client.ExecuteAsync(request);
-                if (response.IsSuccessful)
-                {
-                    var json = JObject.Parse(response.Content);
-                    if (json != null)
-                    {
-                        string accessToken = json["access_token"].ToString();
-                        string expiresIn = json["expires_in"].ToString();
-                        TumblrAccessTokenModel tokenModel = new TumblrAccessTokenModel();
-                        tokenModel.AccessToken = accessToken;
-                        tokenModel.ExpiresIn = expiresIn;
-                        return tokenModel;
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-                else
+                if (!response.IsSuccessful)
                 {
                     return null;
                 }
+
+                var json = JObject.Parse(response.Content);
+                if (json == null)
+                {
+                    return null;
+                }
+
+                string accessToken = json["access_token"].ToString();
+                string expiresIn = json["expires_in"].ToString();
+                TumblrAccessTokenModel tokenModel = new TumblrAccessTokenModel();
+                tokenModel.AccessToken = accessToken;
+                tokenModel.ExpiresIn = expiresIn;
+                return tokenModel;
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 return null;
             }
@@ -139,14 +135,12 @@ namespace RestSharpSocialMediaPosts.Services
             {
                 var response = await client.ExecuteAsync(request);
 
-                if (response.IsSuccessful)
-                {
-                    return $"Success: {response.Content}";
-                }
-                else
+                if (!response.IsSuccessful)
                 {
                     return $"Error: {response.StatusCode} - {response.StatusDescription} - {response.Content}";
                 }
+
+                return $"Success: {response.Content}";
             }
             catch (Exception ex)
             {

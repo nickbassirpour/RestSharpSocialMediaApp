@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RestSharpSocialMediaPosts.Models.Reddit
+namespace RestSharpSocialMediaPosts.Reddit.Models
 {
     public class RedditPostModel
     {

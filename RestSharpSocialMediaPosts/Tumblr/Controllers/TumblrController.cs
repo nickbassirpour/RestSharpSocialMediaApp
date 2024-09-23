@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
-using RestSharpSocialMediaPosts.Models.Reddit;
-using RestSharpSocialMediaPosts.Models.Tumblr;
-using RestSharpSocialMediaPosts.Services;
-using RestSharpSocialMediaPosts.Services.Interfaces;
+using RestSharpSocialMediaPosts.Tumblr.Models;
+using RestSharpSocialMediaPosts.Tumblr.Services.Interfaces;
 
-namespace RestSharpSocialMediaPosts.Controllers
+namespace RestSharpSocialMediaPosts.Tumblr.Controllers
 {
     public class TumblrController : ControllerBase
     {
@@ -24,14 +22,11 @@ namespace RestSharpSocialMediaPosts.Controllers
             try
             {
                 bool success = await _service.MakeOAuth2Request();
-                if (success)
-                {
-                    return StatusCode(201);
-                }
-                else
+                if (!success)
                 {
                     return BadRequest();
                 }
+                return StatusCode(201);
             }
             catch (Exception ex)
             {
@@ -46,16 +41,15 @@ namespace RestSharpSocialMediaPosts.Controllers
             try
             {
                 TumblrAccessTokenModel? tokenModel = await _service.GetAccessToken(code);
-                if (tokenModel != null)
-                {
-                    HttpContext.Session.SetString("TumblrAccessToken", tokenModel.AccessToken);
-                    HttpContext.Session.SetString("TumblrExpiresIn", tokenModel.ExpiresIn);
-                    return StatusCode(201, tokenModel.AccessToken);
-                }
-                else
+                if (tokenModel == null)
                 {
                     return BadRequest();
                 }
+                
+                HttpContext.Session.SetString("TumblrAccessToken", tokenModel.AccessToken);
+                HttpContext.Session.SetString("TumblrExpiresIn", tokenModel.ExpiresIn);
+                return StatusCode(201, tokenModel.AccessToken);
+                
             }
             catch (Exception ex)
             {

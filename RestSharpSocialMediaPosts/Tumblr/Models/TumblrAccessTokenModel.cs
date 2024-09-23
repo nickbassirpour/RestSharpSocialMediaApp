@@ -1,4 +1,4 @@
-﻿namespace RestSharpSocialMediaPosts.Models.Tumblr
+﻿namespace RestSharpSocialMediaPosts.Tumblr.Models
 {
     public class TumblrAccessTokenModel
     {
