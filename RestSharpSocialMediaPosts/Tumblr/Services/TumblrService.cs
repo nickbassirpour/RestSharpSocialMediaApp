@@ -8,11 +8,15 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using RestSharpSocialMediaPosts.Tumblr.Services.Interfaces;
 using RestSharpSocialMediaPosts.Tumblr.Models;
+using RestSharpSocialMediaPosts.Validation;
 
 namespace RestSharpSocialMediaPosts.Tumblr.Services
 {
     public class TumblrService : ITumblrService
     {
+        private static string _state = Guid.NewGuid().ToString();
+        string _clientId = Environment.GetEnvironmentVariable("tumblr_consumer_key");
+        string _clientSecret = Environment.GetEnvironmentVariable("tumblr_consumer_secret");
         public async Task<bool> MakeOAuth2Request()
         {
             RestClient client = new RestClient("https://www.tumblr.com/");
@@ -22,10 +26,10 @@ namespace RestSharpSocialMediaPosts.Tumblr.Services
 
             TumblrAuthModel authModel = new TumblrAuthModel();
 
-            request.AddParameter("client_id", authModel.client_id);
+            request.AddParameter("client_id", _clientId);
             request.AddParameter("response_type", authModel.response_type);
             request.AddParameter("scope", authModel.scope);
-            request.AddParameter("state", authModel.state);
+            request.AddParameter("state", _state);
             if (authModel.redirect_uri != null)
             {
                 request.AddParameter("redirect_uri", authModel.redirect_uri);
@@ -47,8 +51,10 @@ namespace RestSharpSocialMediaPosts.Tumblr.Services
             }
         }
 
-        public async Task<TumblrAccessTokenModel?> GetAccessToken(string authToken)
+        public async Task<Result<TumblrAccessTokenModel?, ValidationFailed>> GetAccessToken(string authToken, string stateToCompare)
         {
+            if (stateToCompare != _state) return new ValidationFailed("Potential CSRF attack", 403);
+
             RestClient client = new RestClient("https://api.tumblr.com/");
             RestRequest request = new RestRequest("v2/oauth2/token", Method.Post);
 
@@ -57,33 +63,41 @@ namespace RestSharpSocialMediaPosts.Tumblr.Services
 
             request.AddParameter("grant_type", accessModel.grant_type);
             request.AddParameter("code", accessModel.code);
-            request.AddParameter("client_id", accessModel.client_id);
-            request.AddParameter("client_secret", accessModel.client_secret);
-
+            request.AddParameter("client_id", _clientId);
+            request.AddParameter("client_secret", _clientSecret);
+            
             try
             {
-                var response = await client.ExecuteAsync(request);
+                RestResponse response = await client.ExecuteAsync(request);
                 if (!response.IsSuccessful)
                 {
-                    return null;
+                    return new ValidationFailed(response);
                 }
 
                 var json = JObject.Parse(response.Content);
                 if (json == null)
                 {
-                    return null;
+                    return new ValidationFailed("Response content is null", 500);
                 }
 
                 string accessToken = json["access_token"].ToString();
                 string expiresIn = json["expires_in"].ToString();
-                TumblrAccessTokenModel tokenModel = new TumblrAccessTokenModel();
-                tokenModel.AccessToken = accessToken;
-                tokenModel.ExpiresIn = expiresIn;
+
+                if (string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(expiresIn))
+                {
+                    return new ValidationFailed("Access token or expiration is missing", 400);
+                }
+
+                TumblrAccessTokenModel tokenModel = new TumblrAccessTokenModel()
+                {
+                    AccessToken = accessToken,
+                    ExpiresIn = expiresIn
+                };
                 return tokenModel;
             }
             catch (Exception ex)
             {
-                return null;
+                return new ValidationFailed(ex.Message, 500);
             }
         }
 

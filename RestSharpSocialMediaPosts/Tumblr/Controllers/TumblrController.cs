@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
+using RestSharp;
 using RestSharpSocialMediaPosts.Tumblr.Models;
 using RestSharpSocialMediaPosts.Tumblr.Services.Interfaces;
+using RestSharpSocialMediaPosts.Validation;
 
 namespace RestSharpSocialMediaPosts.Tumblr.Controllers
 {
@@ -40,15 +42,19 @@ namespace RestSharpSocialMediaPosts.Tumblr.Controllers
         {
             try
             {
-                TumblrAccessTokenModel? tokenModel = await _service.GetAccessToken(code);
-                if (tokenModel == null)
-                {
-                    return BadRequest();
-                }
-                
-                HttpContext.Session.SetString("TumblrAccessToken", tokenModel.AccessToken);
-                HttpContext.Session.SetString("TumblrExpiresIn", tokenModel.ExpiresIn);
-                return StatusCode(201, tokenModel.AccessToken);
+                var response = await _service.GetAccessToken(code, state);
+
+                return response.Match<IActionResult>(
+                    success =>
+                    {
+                        HttpContext.Session.SetString("TumblrAccessToken", success.AccessToken);
+                        HttpContext.Session.SetString("TumblrExpiresIn", success.ExpiresIn);
+                        return StatusCode(201, success.AccessToken);
+                    },
+                    error =>
+                    {
+                        return StatusCode((int)error.StatusCode.GetValueOrDefault(500), error.ErrorMessage);
+                    });
                 
             }
             catch (Exception ex)

@@ -58,7 +58,7 @@ namespace RestSharpSocialMediaPosts.Reddit.Services
         {
             if (stateToCompare != _state)
             {
-                return ("Potential CSRF Attack. Ending program.", null);
+                return ("Potential CSRF Attack.", null);
             }
 
             try
@@ -66,26 +66,22 @@ namespace RestSharpSocialMediaPosts.Reddit.Services
                 var (client, request) = FillOutLoginRequest(authToken);
                 var response = await client.ExecuteAsync(request);
 
-                if (response != null && response.IsSuccessful)
+                if (response == null)
                 {
-                    var json = JObject.Parse(response.Content);
-                    if (json != null)
-                    {
-                        string? access_token = json["access_token"]?.ToString();
-                        string? refresh_token = json["refresh_token"]?.ToString();
-                        return (access_token, refresh_token);
-                    }
-                    else
-                    {
-                        return (null, null);
-                    }
+                    return (null, null);
                 }
-                else
+
+                var json = JObject.Parse(response.Content);
+                if (json == null)
                 {
                     Console.WriteLine($"Error: {response.StatusCode}");
                     Console.WriteLine($"Content: {response.Content}");
                     return (null, null);
                 }
+
+                string? access_token = json["access_token"]?.ToString();
+                string? refresh_token = json["refresh_token"]?.ToString();
+                return (access_token, refresh_token);
             }
             catch (Exception ex)
             {
@@ -192,14 +188,14 @@ namespace RestSharpSocialMediaPosts.Reddit.Services
             {
                 return (null, null);
             }
+            
+            RestClient client = new RestClient("https://reddit.com/");
+            RestRequest request = new RestRequest("/api/v1/access_token");
 
-                RestClient client = new RestClient("https://reddit.com/");
-                RestRequest request = new RestRequest("/api/v1/access_token");
+            request.AddHeader("Authorization", "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{clientId}:{clientSecret}")));
 
-                request.AddHeader("Authorization", "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{clientId}:{clientSecret}")));
-
-                request.AddParameter("grant_type", "refresh_token");
-                request.AddParameter("refresh_token", refreshToken);
+            request.AddParameter("grant_type", "refresh_token");
+            request.AddParameter("refresh_token", refreshToken);
 
             try
             {

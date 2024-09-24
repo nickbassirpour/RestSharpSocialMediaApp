@@ -1,13 +1,13 @@
 ﻿using RestSharp;
-using RestSharpSocialMediaPosts.Models.Tumblr;
+using RestSharpSocialMediaPosts.Tumblr.Models;
+using RestSharpSocialMediaPosts.Validation;
 
-namespace RestSharpSocialMediaPosts.Services.Interfaces
+namespace RestSharpSocialMediaPosts.Tumblr.Services.Interfaces
 {
     public interface ITumblrService
     {
         Task<bool> MakeOAuth2Request();
-
-        Task<TumblrAccessTokenModel?> GetAccessToken(string authToken);
+        Task<Result<TumblrAccessTokenModel?, ValidationFailed>> GetAccessToken(string authToken, string stateToCompare);
         Task<string> PostTextPost(TumblrTextPostModel textPostModel, string accessToken);
 
     }

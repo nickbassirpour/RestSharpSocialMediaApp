@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RestSharpSocialMediaPosts.Models.Tumblr
+namespace RestSharpSocialMediaPosts.Tumblr.Models
 {
     public class TumblrTextPostModel : TumblrPostModel
     {

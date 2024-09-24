@@ -2,7 +2,7 @@
 using System.Security.Claims;
 using System.Security.Principal;
 
-namespace RestSharpSocialMediaPosts.Models.Reddit
+namespace RestSharpSocialMediaPosts.Reddit.Models
 {
     public class RedditAuthModel
     {

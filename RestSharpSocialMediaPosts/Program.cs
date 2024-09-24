@@ -1,6 +1,8 @@
-using RestSharpSocialMediaPosts.Services;
-using RestSharpSocialMediaPosts.Services.Interfaces;
 using DotNetEnv;
+using RestSharpSocialMediaPosts.Reddit.Services;
+using RestSharpSocialMediaPosts.Reddit.Services.Interfaces;
+using RestSharpSocialMediaPosts.Tumblr.Services;
+using RestSharpSocialMediaPosts.Tumblr.Services.Interfaces;
 
 Env.Load();
 

@@ -5,11 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RestSharpSocialMediaPosts.Models.Reddit
+namespace RestSharpSocialMediaPosts.Reddit.Models
 {
     public class RedditLoginModel
     {
-        [Required] 
+        [Required]
         public string ClientId { get; set; }
         [Required]
         public string ClientSecret { get; set; }

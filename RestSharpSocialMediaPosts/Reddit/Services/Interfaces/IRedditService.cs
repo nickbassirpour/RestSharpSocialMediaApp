@@ -1,6 +1,6 @@
-﻿using RestSharpSocialMediaPosts.Models.Reddit;
+﻿using RestSharpSocialMediaPosts.Reddit.Models;
 
-namespace RestSharpSocialMediaPosts.Services.Interfaces
+namespace RestSharpSocialMediaPosts.Reddit.Services.Interfaces
 {
     public interface IRedditService
     {
