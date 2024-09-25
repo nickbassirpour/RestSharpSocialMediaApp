@@ -101,8 +101,9 @@ namespace RestSharpSocialMediaPosts.Tumblr.Services
             }
         }
 
-        private RestRequest FilloutDefaultRequest(RestRequest request, TumblrPostModel postModel, string accessToken)
+        private RestRequest FilloutDefaultRequest(string blogId, TumblrPostModel postModel, string accessToken)
         {
+            RestRequest request = new RestRequest($"v2/blog/{blogId}/post", Method.Post);
             request.AddHeader("Authorization", $"Bearer {accessToken}");
             request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
 
@@ -129,8 +130,7 @@ namespace RestSharpSocialMediaPosts.Tumblr.Services
         public async Task<string> PostTextPost(TumblrTextPostModel textPostModel, string accessToken)
         {
             RestClient client = new RestClient($"https://api.tumblr.com/");
-            RestRequest unfilledRequest = new RestRequest($"v2/blog/{textPostModel.blogId}/post", Method.Post);
-            RestRequest request = FilloutDefaultRequest(unfilledRequest, textPostModel, accessToken);
+            RestRequest request = FilloutDefaultRequest(textPostModel.blogId, textPostModel, accessToken);
 
             if (textPostModel.title != null)
             {

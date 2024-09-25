@@ -1,4 +1,5 @@
 ﻿using RestSharpSocialMediaPosts.Reddit.Models;
+using RestSharpSocialMediaPosts.Validation;
 
 namespace RestSharpSocialMediaPosts.Reddit.Services.Interfaces
 {
@@ -6,7 +7,7 @@ namespace RestSharpSocialMediaPosts.Reddit.Services.Interfaces
     {
         void StartTokenTimer();
         Task<bool> MakeOAuth2Request();
-        Task<(string?, string?)> GetAccessToken(string authToken, string state);
-        Task<string?> SubmitPost(RedditPostModel postModel, string accessToken);
+        Task<Result<RedditTokenModel, ValidationFailed>> GetAccessToken(string authToken, string stateToCompare);
+        Task<Result<string?, ValidationFailed>> SubmitPost(RedditPostModel postModel, string accessToken);
     }
 }

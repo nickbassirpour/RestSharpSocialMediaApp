@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using RestSharp;
 using RestSharpSocialMediaPosts.Reddit.Models;
 using RestSharpSocialMediaPosts.Reddit.Services.Interfaces;
+using RestSharpSocialMediaPosts.Validation;
 using System.Diagnostics;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
@@ -54,39 +55,46 @@ namespace RestSharpSocialMediaPosts.Reddit.Services
             }, null, TimeSpan.FromHours(1), Timeout.InfiniteTimeSpan);
         }
 
-        public async Task<(string?, string?)> GetAccessToken(string authToken, string stateToCompare)
+        public async Task<Result<RedditTokenModel, ValidationFailed>> GetAccessToken(string authToken, string stateToCompare)
         {
             if (stateToCompare != _state)
             {
-                return ("Potential CSRF Attack.", null);
+                return new ValidationFailed("Potential CSRF Attack.", 403);
             }
 
             try
             {
                 var (client, request) = FillOutLoginRequest(authToken);
-                var response = await client.ExecuteAsync(request);
+                RestResponse response = await client.ExecuteAsync(request);
 
-                if (response == null)
+                if (!response.IsSuccessful)
                 {
-                    return (null, null);
+                    return new ValidationFailed(response);
                 }
 
                 var json = JObject.Parse(response.Content);
                 if (json == null)
                 {
-                    Console.WriteLine($"Error: {response.StatusCode}");
-                    Console.WriteLine($"Content: {response.Content}");
-                    return (null, null);
+                    return new ValidationFailed("Response content is null", 500);
                 }
 
-                string? access_token = json["access_token"]?.ToString();
-                string? refresh_token = json["refresh_token"]?.ToString();
-                return (access_token, refresh_token);
+                if (string.IsNullOrEmpty(json["access_token"].ToString()) || string.IsNullOrEmpty(json["refresh_token"].ToString()))
+                {
+                    return new ValidationFailed("Access or refresh token is missing", 400);
+                }
+
+                RedditTokenModel tokens = new RedditTokenModel()
+                {
+                    accessToken = json["access_token"]?.ToString(),
+                    refreshToken = json["refresh_token"]?.ToString()
+                };
+
+
+                return tokens;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception occurred: {ex.Message}");
-                return (null, null);
+                return new ValidationFailed(ex.Message, 500);
             }
         }
 
@@ -164,29 +172,27 @@ namespace RestSharpSocialMediaPosts.Reddit.Services
             return (client, request);
         }
 
-        public async Task<string?> SubmitPost(RedditPostModel postModel, string accessToken)
+        public async Task<Result<string?, ValidationFailed>> SubmitPost(RedditPostModel postModel, string accessToken)
         {
             var (client, request) = FillOutPostRequest(postModel, accessToken);
-            var submitResponse = await client.ExecuteAsync(request);
+            RestResponse response = await client.ExecuteAsync(request);
 
-            if (submitResponse.IsSuccessful)
+            if (!response.IsSuccessful)
             {
-                return "Post submitted successfully!";
+                return new ValidationFailed(response);
             }
-            else
-            {
-                Console.WriteLine(submitResponse.Content);
-                return $"Error: {submitResponse.StatusCode}";
-            }
+
+            return "Post submitted successfully";
+            
         }
 
-        private async Task<(string?, string?)> RefreshToken()
+        private async Task<Result<(string?, string?), ValidationFailed>> RefreshToken()
         {
             string? refreshToken = _httpContextAccessor.HttpContext.Session.GetString("redditRefreshToken");
 
             if (refreshToken == null)
             {
-                return (null, null);
+                return new ValidationFailed("Refresh Token is null", 500);
             }
             
             RestClient client = new RestClient("https://reddit.com/");
@@ -199,26 +205,32 @@ namespace RestSharpSocialMediaPosts.Reddit.Services
 
             try
             {
-                var response = await client.ExecuteAsync(request);
+                RestResponse response = await client.ExecuteAsync(request);
                 if (!response.IsSuccessful)
                 {
-                    return (null, null);
+                    return new ValidationFailed(response);
                 }
 
                 var json = JObject.Parse(response.Content);
                 if (json == null)
                 {
-                    return (null, null);
+                    return new ValidationFailed("Response content is null", 500);
                 }
 
                 string newAccessToken = json["access_token"].ToString();
                 string newRefreshToken = json["refresh_token"].ToString();
+
+                if (string.IsNullOrEmpty(newAccessToken) || string.IsNullOrEmpty(newRefreshToken))
+                {
+                    return new ValidationFailed("Access or refresh token is missing", 400);
+                }
+
                 return (newAccessToken, newRefreshToken);
                
                 }
             catch (Exception ex)
             {
-                return (ex.Message, null);
+                return new ValidationFailed(ex.Message, 500);
             }
            
         }
