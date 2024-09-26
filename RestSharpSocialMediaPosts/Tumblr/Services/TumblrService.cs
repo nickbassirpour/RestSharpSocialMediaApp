@@ -15,8 +15,16 @@ namespace RestSharpSocialMediaPosts.Tumblr.Services
     public class TumblrService : ITumblrService
     {
         private static string _state = Guid.NewGuid().ToString();
-        string _clientId = Environment.GetEnvironmentVariable("tumblr_consumer_key");
-        string _clientSecret = Environment.GetEnvironmentVariable("tumblr_consumer_secret");
+        private readonly string? _clientId;
+        private readonly string? _clientSecret;
+        private readonly string? _redirectUri;
+
+        public TumblrService(IConfiguration configuration)
+        {
+            _clientId = configuration["Tumblr:ConsumerKey"];
+            _clientSecret = configuration["Tumblr:ConsumerSecret"];
+            _redirectUri = configuration["Tumblr:RedirectUri"];
+        }
         public async Task<bool> MakeOAuth2Request()
         {
             RestClient client = new RestClient("https://www.tumblr.com/");
@@ -65,7 +73,8 @@ namespace RestSharpSocialMediaPosts.Tumblr.Services
             request.AddParameter("code", accessModel.code);
             request.AddParameter("client_id", _clientId);
             request.AddParameter("client_secret", _clientSecret);
-            
+            request.AddParameter("redirect_uri", _redirectUri);
+
             try
             {
                 RestResponse response = await client.ExecuteAsync(request);

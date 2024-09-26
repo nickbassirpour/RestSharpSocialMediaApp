@@ -14,13 +14,17 @@ namespace RestSharpSocialMediaPosts.Reddit.Services
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private static string _state = Guid.NewGuid().ToString();
-        string clientId = Environment.GetEnvironmentVariable("reddit_client_id");
-        string clientSecret = Environment.GetEnvironmentVariable("reddit_client_secret");
-        private Timer _refreshTokenTimer;
+        private readonly string? _clientId;
+        private readonly string? _clientSecret;
+        private readonly string? _redirectUri;
+        private Timer? _refreshTokenTimer;
 
-        public RedditService(IHttpContextAccessor httpContextAccessor)
+        public RedditService(IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
         {
-            _httpContextAccessor = _httpContextAccessor;
+            _httpContextAccessor = httpContextAccessor;
+            _clientId = configuration["Reddit:ClientId"];
+            _clientSecret = configuration["Reddit:ClientSecret"];
+            _redirectUri = configuration["Reddit:RedirectUri"];
         }
 
         private (RestClient, RestRequest) FillOutLoginRequest(string authToken)
@@ -31,10 +35,8 @@ namespace RestSharpSocialMediaPosts.Reddit.Services
             // The subpath for the access token request
             RestRequest request = new RestRequest("/api/v1/access_token", Method.Post);
 
-            string redirectURI = Environment.GetEnvironmentVariable("reddit_redirect_uri");
-
             // Add headers
-            request.AddHeader("Authorization", "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{clientId}:{clientSecret}")));
+            request.AddHeader("Authorization", "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_clientId}:{_clientSecret}")));
             request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
 
 
@@ -42,7 +44,7 @@ namespace RestSharpSocialMediaPosts.Reddit.Services
             request.AddParameter("grant_type", "authorization_code");
             request.AddParameter("duration", "permanent");
             request.AddParameter("code", authToken);
-            request.AddParameter("redirect_uri", redirectURI);
+            request.AddParameter("redirect_uri", _redirectUri);
 
             return (client, request);
         }
@@ -108,10 +110,8 @@ namespace RestSharpSocialMediaPosts.Reddit.Services
 
             RedditAuthModel authModel = new RedditAuthModel();
 
-            string clientId = Environment.GetEnvironmentVariable("reddit_client_id");
-
             // Add Parameters
-            request.AddParameter("client_id", clientId);
+            request.AddParameter("client_id", _clientId);
             request.AddParameter("response_type", "code");
             request.AddParameter("duration", "permanent");
             request.AddParameter("state", _state);
@@ -198,7 +198,7 @@ namespace RestSharpSocialMediaPosts.Reddit.Services
             RestClient client = new RestClient("https://reddit.com/");
             RestRequest request = new RestRequest("/api/v1/access_token");
 
-            request.AddHeader("Authorization", "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{clientId}:{clientSecret}")));
+            request.AddHeader("Authorization", "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_clientId}:{_clientSecret}")));
 
             request.AddParameter("grant_type", "refresh_token");
             request.AddParameter("refresh_token", refreshToken);

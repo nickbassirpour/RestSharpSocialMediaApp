@@ -46,11 +46,12 @@ namespace RestSharpSocialMediaPosts.Reddit.Controllers
                     return BadRequest();
                 }
                 var response = await _service.GetAccessToken(code, state);
-                response.Match<IActionResult>(
+                return response.Match<IActionResult>(
                     success =>
                     {
                         HttpContext.Session.SetString("redditAccessToken", success.accessToken);
                         HttpContext.Session.SetString("redditRefreshToken", success.refreshToken);
+                        _service.StartTokenTimer();
                         return StatusCode(201, success.accessToken);
                     },
                     error =>
@@ -58,9 +59,6 @@ namespace RestSharpSocialMediaPosts.Reddit.Controllers
                         return StatusCode((int)error.StatusCode.GetValueOrDefault(500), error.ErrorMessage);
                     }
                 );
-
-                _service.StartTokenTimer();
-                return StatusCode(201);
             }
             catch (Exception ex)
             {
@@ -108,13 +106,16 @@ namespace RestSharpSocialMediaPosts.Reddit.Controllers
             
             try
             {
-                string? result = await _service.SubmitPost(postModel, accessToken);
-                if (result == null)
-                {
-                    return BadRequest();
-                }
-                return StatusCode(code, result);
-                    
+                var response = await _service.SubmitPost(postModel, accessToken);
+                return response.Match<IActionResult>(
+                    success =>
+                    {
+                        return StatusCode(201, success);
+                    },
+                    error =>
+                    {
+                        return StatusCode((int)error.StatusCode.GetValueOrDefault(500), error.ErrorMessage);
+                    });
             }
             catch (Exception ex)
             {
