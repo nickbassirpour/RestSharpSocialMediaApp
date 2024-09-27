@@ -9,5 +9,6 @@ namespace RestSharpSocialMediaPosts.Reddit.Services.Interfaces
         Task<bool> MakeOAuth2Request();
         Task<Result<RedditTokenModel, ValidationFailed>> GetAccessToken(string authToken, string stateToCompare);
         Task<Result<string?, ValidationFailed>> SubmitPost(RedditPostModel postModel, string accessToken);
+        Task<Result<(string?, string?), ValidationFailed>> RefreshToken();
     }
 }

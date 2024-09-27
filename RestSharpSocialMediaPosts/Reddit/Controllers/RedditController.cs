@@ -51,6 +51,7 @@ namespace RestSharpSocialMediaPosts.Reddit.Controllers
                     {
                         HttpContext.Session.SetString("redditAccessToken", success.accessToken);
                         HttpContext.Session.SetString("redditRefreshToken", success.refreshToken);
+
                         _service.StartTokenTimer();
                         return StatusCode(201, success.accessToken);
                     },

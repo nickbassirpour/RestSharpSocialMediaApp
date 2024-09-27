@@ -186,7 +186,7 @@ namespace RestSharpSocialMediaPosts.Reddit.Services
             
         }
 
-        private async Task<Result<(string?, string?), ValidationFailed>> RefreshToken()
+        public async Task<Result<(string?, string?), ValidationFailed>> RefreshToken()
         {
             string? refreshToken = _httpContextAccessor.HttpContext.Session.GetString("redditRefreshToken");
 
