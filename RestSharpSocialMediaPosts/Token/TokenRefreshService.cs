@@ -1,14 +1,14 @@
 ﻿using RestSharpSocialMediaPosts.Reddit.Services.Interfaces;
 using RestSharpSocialMediaPosts.Tumblr.Services.Interfaces;
 
-namespace RestSharpSocialMediaPosts
+namespace RestSharpSocialMediaPosts.Token
 {
-    public class TokenRefreshService : BackgroundService
+    public class TokenRefreshService : BackgroundService, ITokenRefreshService
     {
         private readonly ILogger<TokenRefreshService> _logger;
-        private readonly IRedditService _redditService; 
+        private readonly IRedditService _redditService;
         private readonly ITumblrService _tumblrService;
-        private string? _redditRefreshToken;
+        private static string? _redditRefreshToken;
         private string? _tumblrRefreshToken;
 
         public TokenRefreshService(ILogger<TokenRefreshService> logger, IRedditService redditService, ITumblrService tumblrService)
@@ -24,7 +24,7 @@ namespace RestSharpSocialMediaPosts
 
             while (!stoppingToken.IsCancellationRequested)
             {
-               if (!string.IsNullOrEmpty(_redditRefreshToken))
+                if (!string.IsNullOrEmpty(_redditRefreshToken))
                 {
                     _logger.LogInformation("Reddit refresh token found. Starting refresh process...");
                     await StartRedditTokenRefresh(stoppingToken);

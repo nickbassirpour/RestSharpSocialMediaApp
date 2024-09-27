@@ -2,15 +2,18 @@
 using Microsoft.AspNetCore.Mvc;
 using RestSharpSocialMediaPosts.Reddit.Models;
 using RestSharpSocialMediaPosts.Reddit.Services.Interfaces;
+using RestSharpSocialMediaPosts.Token;
 
 namespace RestSharpSocialMediaPosts.Reddit.Controllers
 {
     public class RedditController : ControllerBase
     {
         private readonly IRedditService _service;
-        public RedditController(IRedditService redditService)
+        private readonly ITokenRefreshService _tokenRefreshService;
+        public RedditController(IRedditService redditService, ITokenRefreshService tokenRefreshService)
         {
             _service = redditService;
+            _tokenRefreshService = tokenRefreshService;
         }
 
         [AllowAnonymous]
@@ -52,7 +55,8 @@ namespace RestSharpSocialMediaPosts.Reddit.Controllers
                         HttpContext.Session.SetString("redditAccessToken", success.accessToken);
                         HttpContext.Session.SetString("redditRefreshToken", success.refreshToken);
 
-                        _service.StartTokenTimer();
+                        _tokenRefreshService.SetRedditRefreshToken(success.refreshToken);
+                        
                         return StatusCode(201, success.accessToken);
                     },
                     error =>
