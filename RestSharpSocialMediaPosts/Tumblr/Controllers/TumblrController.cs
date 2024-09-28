@@ -48,7 +48,7 @@ namespace RestSharpSocialMediaPosts.Tumblr.Controllers
                     success =>
                     {
                         HttpContext.Session.SetString("TumblrAccessToken", success.AccessToken);
-                        HttpContext.Session.SetString("TumblrExpiresIn", success.ExpiresIn);
+                        HttpContext.Session.SetString("TumblrRefreshToken", success.RefreshToken);
                         return StatusCode(201, success.AccessToken);
                     },
                     error =>

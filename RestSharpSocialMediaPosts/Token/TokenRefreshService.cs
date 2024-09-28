@@ -41,6 +41,11 @@ namespace RestSharpSocialMediaPosts.Token
             _redditRefreshToken = refreshToken;
         }
 
+        public void SetTumblrRefreshToken(string refreshToken)
+        {
+            _tumblrRefreshToken = refreshToken;
+        }
+
         private async Task StartRedditTokenRefresh(CancellationToken stoppingToken)
         {
             while (!stoppingToken.IsCancellationRequested)
@@ -51,6 +56,20 @@ namespace RestSharpSocialMediaPosts.Token
                 {
                     _logger.LogInformation("Refreshing reddit token...");
                     await _redditService.RefreshToken();
+                }
+            }
+        }
+
+        private async Task StartTumblrTokenRefresh(CancellationToken stoppingToken)
+        {
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
+
+                if (!string.IsNullOrEmpty(_tumblrRefreshToken))
+                {
+                    _logger.LogInformation("Refreshing tumblr token...")
+                    //await _tumblrService
                 }
             }
         }

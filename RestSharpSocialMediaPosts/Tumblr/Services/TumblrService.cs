@@ -90,9 +90,9 @@ namespace RestSharpSocialMediaPosts.Tumblr.Services
                 }
 
                 string accessToken = json["access_token"].ToString();
-                string expiresIn = json["expires_in"].ToString();
+                string refreshToken = json["refresh_token"].ToString();
 
-                if (string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(expiresIn))
+                if (string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(refreshToken))
                 {
                     return new ValidationFailed("Access token or expiration is missing", 400);
                 }
@@ -100,7 +100,7 @@ namespace RestSharpSocialMediaPosts.Tumblr.Services
                 TumblrAccessTokenModel tokenModel = new TumblrAccessTokenModel()
                 {
                     AccessToken = accessToken,
-                    ExpiresIn = expiresIn
+                    RefreshToken = refreshToken
                 };
                 return tokenModel;
             }
@@ -170,5 +170,7 @@ namespace RestSharpSocialMediaPosts.Tumblr.Services
                 return $"Exception occurred: {ex.Message}";
             }
         }
+
+        //create refresh service
     }
 }
