@@ -17,7 +17,6 @@ namespace RestSharpSocialMediaPosts.Reddit.Services
         private readonly string? _clientId;
         private readonly string? _clientSecret;
         private readonly string? _redirectUri;
-        private Timer? _refreshTokenTimer;
 
         public RedditService(IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
         {
@@ -47,14 +46,6 @@ namespace RestSharpSocialMediaPosts.Reddit.Services
             request.AddParameter("redirect_uri", _redirectUri);
 
             return (client, request);
-        }
-
-        public void StartTokenTimer()
-        {
-            _refreshTokenTimer = new Timer(async state =>
-            {
-                await RefreshToken();
-            }, null, TimeSpan.FromHours(1), Timeout.InfiniteTimeSpan);
         }
 
         public async Task<Result<RedditTokenModel, ValidationFailed>> GetAccessToken(string authToken, string stateToCompare)
@@ -196,7 +187,7 @@ namespace RestSharpSocialMediaPosts.Reddit.Services
             }
             
             RestClient client = new RestClient("https://reddit.com/");
-            RestRequest request = new RestRequest("/api/v1/access_token");
+            RestRequest request = new RestRequest("/api/v1/access_token", Method.Post );
 
             request.AddHeader("Authorization", "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_clientId}:{_clientSecret}")));
 

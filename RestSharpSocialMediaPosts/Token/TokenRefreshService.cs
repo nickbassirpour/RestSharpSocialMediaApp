@@ -30,6 +30,12 @@ namespace RestSharpSocialMediaPosts.Token
                     await StartRedditTokenRefresh(stoppingToken);
                 }
 
+                if (!string.IsNullOrEmpty(_tumblrRefreshToken))
+                {
+                    _logger.LogInformation("Tumblr refresh token found. Starting refresh process...");
+                    await StartTumblrTokenRefresh(stoppingToken);
+                }
+
                 await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
             }
 
@@ -68,8 +74,8 @@ namespace RestSharpSocialMediaPosts.Token
 
                 if (!string.IsNullOrEmpty(_tumblrRefreshToken))
                 {
-                    _logger.LogInformation("Refreshing tumblr token...")
-                    //await _tumblrService
+                    _logger.LogInformation("Refreshing tumblr token...");
+                    await _tumblrService.RefreshToken();
                 }
             }
         }

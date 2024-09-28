@@ -9,18 +9,21 @@ using Newtonsoft.Json;
 using RestSharpSocialMediaPosts.Tumblr.Services.Interfaces;
 using RestSharpSocialMediaPosts.Tumblr.Models;
 using RestSharpSocialMediaPosts.Validation;
+using Microsoft.AspNetCore.Http;
 
 namespace RestSharpSocialMediaPosts.Tumblr.Services
 {
     public class TumblrService : ITumblrService
     {
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private static string _state = Guid.NewGuid().ToString();
         private readonly string? _clientId;
         private readonly string? _clientSecret;
         private readonly string? _redirectUri;
 
-        public TumblrService(IConfiguration configuration)
+        public TumblrService(IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
         {
+            _httpContextAccessor = httpContextAccessor;
             _clientId = configuration["Tumblr:ConsumerKey"];
             _clientSecret = configuration["Tumblr:ConsumerSecret"];
             _redirectUri = configuration["Tumblr:RedirectUri"];
@@ -171,6 +174,54 @@ namespace RestSharpSocialMediaPosts.Tumblr.Services
             }
         }
 
-        //create refresh service
+        public async Task<Result<(string?, string?), ValidationFailed>> RefreshToken()
+        {
+            string? accessToken = _httpContextAccessor.HttpContext.Session.GetString("tumblrAccessToken");
+            string? refreshToken = _httpContextAccessor.HttpContext.Session.GetString("tumblrRefreshToken");
+
+            if (refreshToken == null)
+            {
+                return new ValidationFailed("Refresh Token is null", 500);
+            }
+
+            RestClient client = new RestClient("https://api.tumblr.com");
+            RestRequest request = new RestRequest("/v2/oauth2/token", Method.Post);
+
+            request.AddHeader("Authorization", "Bearer " + accessToken);
+
+            request.AddParameter("grant_type", "refresh_token");
+            request.AddParameter("client_id", _clientId);
+            request.AddParameter("client_secret", _clientSecret);
+            request.AddParameter("refresh_token", refreshToken);
+
+            try
+            {
+                RestResponse response = await client.ExecuteAsync(request);
+                if (!response.IsSuccessful)
+                {
+                    return new ValidationFailed(response);
+                }
+
+                var json = JObject.Parse(response.Content);
+                if (json == null)
+                {
+                    return new ValidationFailed("Response content is null", 500);
+                }
+
+                string newAccessToken = json["access_token"].ToString();
+                string newRefreshToken = json["refresh_token"].ToString();
+
+                if (string.IsNullOrEmpty(newAccessToken) || string.IsNullOrEmpty(newRefreshToken))
+                {
+                    return new ValidationFailed("Access or refresh token is missing", 400);
+                }
+
+                return (newAccessToken, newRefreshToken);
+            }
+            catch (Exception ex)
+            {
+                return new ValidationFailed(ex.Message, 500);
+            }
+        }
     }
 }
