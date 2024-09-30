@@ -70,6 +70,7 @@ namespace RestSharpSocialMediaPosts.Token
         {
             while (!stoppingToken.IsCancellationRequested)
             {
+                // Token expires after 1 hour
                 await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
 
                 if (!string.IsNullOrEmpty(_tumblrRefreshToken))
