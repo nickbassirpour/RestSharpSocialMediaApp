@@ -67,41 +67,15 @@ namespace RestSharpSocialMediaPosts.Reddit.Controllers
             }
             catch (Exception ex)
             {
+                // coment
                 return BadRequest(ex.Message);
             }
         }
-
-        //[AllowAnonymous]
-        //[HttpPost("reddit_login")]
-        //public async Task<IActionResult> Login(RedditLoginModel loginModel)
-        //{
-        //    int code = 200;
-
-        //    try
-        //    {
-        //        (string? accessToken, string? refreshToken) = await _service.GetAccessToken(loginModel);
-        //        if (accessToken == null || refreshToken == null)
-        //        {
-        //            return BadRequest("An error occurred");
-        //        }
-        //        else
-        //        {
-        //            HttpContext.Session.SetString("redditAccessToken", accessToken);
-        //            HttpContext.Session.SetString("redditRefreshToken", refreshToken);
-        //            return Ok(accessToken);
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ex.Message);
-        //    }
-        //}
 
         [AllowAnonymous]
         [HttpPost("post_thread")]
         public async Task<IActionResult> Post(RedditPostModel postModel)
         {
-            int code = 201;
             string? accessToken = HttpContext.Session.GetString("redditAccessToken");
 
             if (accessToken == null)
