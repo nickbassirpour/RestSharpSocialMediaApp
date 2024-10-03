@@ -67,7 +67,7 @@ namespace RestSharpSocialMediaPosts.Reddit.Controllers
             }
             catch (Exception ex)
             {
-                // coment
+                // coment for the gram
                 return BadRequest(ex.Message);
             }
         }
